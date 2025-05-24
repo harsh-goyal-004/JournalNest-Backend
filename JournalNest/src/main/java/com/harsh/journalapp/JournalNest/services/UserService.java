@@ -75,6 +75,11 @@ public class UserService {
         return new ResponseEntity<>("Invalid username or password",HttpStatus.FORBIDDEN);
     }
 
+//    This method is used to save user along with the journal references
+    public void saveUserWithJournalRef(User user){
+        userRespository.save(user);
+    }
+
 //    This method checks if refresh token is valid and generate new access token
     public ResponseEntity<String> generateNewAccessToken(String token){
        String username =  jwtService.extractUsername(token);
