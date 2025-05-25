@@ -3,10 +3,16 @@ package com.harsh.journalapp.JournalNest.services;
 import com.harsh.journalapp.JournalNest.dto.JournalEntryDTO;
 import com.harsh.journalapp.JournalNest.entity.JournalEntry;
 import com.harsh.journalapp.JournalNest.entity.User;
+import com.harsh.journalapp.JournalNest.enums.Mood;
 import com.harsh.journalapp.JournalNest.mapper.JournalEntryMapper;
 import com.harsh.journalapp.JournalNest.repository.JournalEntryRepository;
 import com.harsh.journalapp.JournalNest.repository.UserRespository;
+import com.harsh.journalapp.JournalNest.utils.TextUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -33,17 +39,23 @@ public class JournalEntryService {
 
 //    Create a new Journal Entry
     @Transactional
-    public void createJournalEntry(JournalEntryDTO journalEntryDTO, String username){
+    public ResponseEntity<JournalEntry> createJournalEntry(JournalEntryDTO journalEntryDTO, String username){
         User user = userRespository.findByUsername(username);
         JournalEntry journalEntry = JournalEntryMapper.toEntity(journalEntryDTO);
+
+        // Generate a random id for each journal entry and get current time
         journalEntry.setId(UUID.randomUUID().toString());
         journalEntry.setCreatedAt(LocalDateTime.now());
 
+        // Count the number of words
+        journalEntry.setWordCount(TextUtils.calculateWordCount(journalEntryDTO.getContent()));
+
+        // Add User Reference
+        journalEntry.setUser(user);
+
         JournalEntry journalEntry1 = journalEntryRepository.save(journalEntry);
 
-        user.getJournalEntries().add(journalEntry1);
-
-        userService.saveUserWithJournalRef(user);
+        return new ResponseEntity<>(journalEntry1, HttpStatus.OK);
     }
 
 
@@ -51,34 +63,33 @@ public class JournalEntryService {
     public ResponseEntity<?> getJournalEntry(String journalEntryId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        User user = userRespository.findByUsername(username);
 
-        if(user != null){
-            List<JournalEntry> journalEntries = user.getJournalEntries();
+        Optional<JournalEntry> journalEntry = journalEntryRepository.findById(journalEntryId);
 
-            if(!journalEntries.isEmpty()){
-                for(JournalEntry journalEntry : journalEntries){
-                    if(journalEntry.getId().equals(journalEntryId)){
-                        return new ResponseEntity<>(journalEntry,HttpStatus.OK);
-                    }
-                }
+        if(journalEntry.isPresent()){
+            JournalEntry journalEntry1 = journalEntry.get();
+            User user = journalEntry1.getUser();
+            if(user != null){
+               if(user.getUsername().equals(username)){
+                   return new ResponseEntity<>(journalEntry1, HttpStatus.OK);
+               }
             }
         }
+
         return new ResponseEntity<>("No Journal Entry Found", HttpStatus.NOT_FOUND);
     }
 
 
 //    GET All Journal Entries
-    public ResponseEntity<List<JournalEntry>> getAllJournalEntries(){
+    public ResponseEntity<Page<JournalEntry>> getAllJournalEntries(int page){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User user = userRespository.findByUsername(username);
 
         if(user != null){
-            List<JournalEntry> journalEntries = user.getJournalEntries();
-            if(!journalEntries.isEmpty()){
-                return new ResponseEntity<>(journalEntries,HttpStatus.OK);
-            }
+            Pageable pageable = PageRequest.of(page - 1 ,10, Sort.by("createdAt").descending());
+            Page<JournalEntry> journalEntries = journalEntryRepository.findJournalEntriesByUser(user,pageable);
+            return new ResponseEntity<>(journalEntries,HttpStatus.OK);
         }
         return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
     }
@@ -86,51 +97,57 @@ public class JournalEntryService {
 
 //    Update Single Journal Entry
     public ResponseEntity<String> updateJournalEntry(String journalEntryId, JournalEntryDTO journalEntryDTO) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        User user = userRespository.findByUsername(username);
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
 
-        List<JournalEntry> journalEntries = user.getJournalEntries();
+            Optional<JournalEntry> existingJournalEntry = journalEntryRepository.findById(journalEntryId);
 
-        if (!journalEntries.isEmpty()) {
-            for (JournalEntry journalEntry : journalEntries) {
-                if (journalEntry.getId().equals(journalEntryId)) {
-                    Optional<JournalEntry> existingJournalEntry = journalEntryRepository.findById(journalEntryId);
+            if (existingJournalEntry.isPresent()) {
+                JournalEntry updatedJournalEntry = existingJournalEntry.get();
 
-                    if (existingJournalEntry.isPresent()) {
-                        JournalEntry updatedJournalEntry = existingJournalEntry.get();
+                User user = updatedJournalEntry.getUser();
+
+                if (user != null && username != null) {
+                    if (user.getUsername().equals(username)) {
                         updatedJournalEntry.setTitle(journalEntryDTO.getTitle());
                         updatedJournalEntry.setContent(journalEntryDTO.getContent());
-                        updatedJournalEntry.setMood(journalEntryDTO.getMood());
-                        updatedJournalEntry.setTags(journalEntryDTO.getTags());
+                        updatedJournalEntry.setMood(Mood.valueOf(journalEntryDTO.getMood().toUpperCase()));
+                        updatedJournalEntry.setTags(JournalEntryMapper.stringToEnum(journalEntryDTO.getTags()));
+
+                        // Count the number of words
+                        updatedJournalEntry.setWordCount(TextUtils.calculateWordCount(journalEntryDTO.getContent()));
 
                         journalEntryRepository.save(updatedJournalEntry);
                         return new ResponseEntity<>("Journal Entry Updated Successfully", HttpStatus.OK);
+
                     }
                 }
             }
-        }
 
-        return new ResponseEntity<>("No Journal Entry Found", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("No Journal Entry Found", HttpStatus.NOT_FOUND);
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid mood or tags");
+        }
     }
+
 
 
 //    Delete Single Journal Entry
     public ResponseEntity<?> deleteJournalEntry(String journalEntryId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
-        User user = userRespository.findByUsername(username);
 
-        List<JournalEntry> journalEntries = user.getJournalEntries();
+        Optional<JournalEntry> journalEntry = journalEntryRepository.findById(journalEntryId);
 
-        if(!journalEntries.isEmpty()){
-            for(JournalEntry journalEntry : journalEntries){
-                if(journalEntry.getId().equals(journalEntryId)){
+        if(journalEntry.isPresent()){
+            User user = journalEntry.get().getUser();
+
+            if(user != null && username != null){
+                if(user.getUsername().equals(username)){
                     journalEntryRepository.deleteById(journalEntryId);
-                    journalEntries.removeIf(journal -> journal.getId().equals(journalEntryId));
-                    user.setJournalEntries(journalEntries);
-                    userService.saveUserWithJournalRef(user);
-                    return new ResponseEntity<>("Journal Entry Deleted Successfully",HttpStatus.OK);
+                    return new ResponseEntity<>("Journal Entry Deleted Successfully", HttpStatus.NO_CONTENT);
                 }
             }
         }

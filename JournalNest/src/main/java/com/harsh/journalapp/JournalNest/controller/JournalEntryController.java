@@ -22,8 +22,7 @@ public class JournalEntryController {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
-            journalEntryService.createJournalEntry(journalEntryDTO,username);
-            return new ResponseEntity<>("Journal Entry created Successfully", HttpStatus.OK);
+            return journalEntryService.createJournalEntry(journalEntryDTO,username);
         }catch(Exception e){
             return new ResponseEntity<>("Something went wrong while creating the journal entry", HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -37,8 +36,9 @@ public class JournalEntryController {
 
 //    Get all Journal Entries
     @GetMapping("/get-all-entries")
-    public ResponseEntity<?> getAllJournalEntries(){
-        return journalEntryService.getAllJournalEntries();
+    public ResponseEntity<?> getAllJournalEntries(@RequestParam(defaultValue = "1") int page){
+        if(page > 1) page = 1;
+        return journalEntryService.getAllJournalEntries(page);
     }
 
 //    Update Single Journal Entry
