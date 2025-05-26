@@ -4,8 +4,10 @@ import com.harsh.journalapp.JournalNest.dto.JournalEntryDTO;
 import com.harsh.journalapp.JournalNest.entity.JournalEntry;
 import com.harsh.journalapp.JournalNest.entity.User;
 import com.harsh.journalapp.JournalNest.enums.Mood;
+import com.harsh.journalapp.JournalNest.enums.Tags;
 import com.harsh.journalapp.JournalNest.mapper.JournalEntryMapper;
 import com.harsh.journalapp.JournalNest.repository.JournalEntryRepository;
+import com.harsh.journalapp.JournalNest.repository.JournalEntryRepositoryImplementation;
 import com.harsh.journalapp.JournalNest.repository.UserRespository;
 import com.harsh.journalapp.JournalNest.utils.TextUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +38,9 @@ public class JournalEntryService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JournalEntryRepositoryImplementation journalEntryRepositoryImplementation;
 
 //    Create a new Journal Entry
     @Transactional
@@ -154,4 +159,15 @@ public class JournalEntryService {
         return new ResponseEntity<>("Journal Entry not found", HttpStatus.NOT_FOUND);
     }
 
+
+//    Get Filter Journal Entries
+    public List<JournalEntry> getFilterJournalEntries(String search, String tag, String mood) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userRespository.findByUsername(username);
+
+        List<JournalEntry> filterJournalEntries = journalEntryRepositoryImplementation.getFilterJournalEntries(search, tag, mood, user);
+
+        return filterJournalEntries;
+    }
 }

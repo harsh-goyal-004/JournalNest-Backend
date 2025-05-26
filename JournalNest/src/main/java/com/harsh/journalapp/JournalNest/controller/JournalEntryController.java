@@ -1,6 +1,7 @@
 package com.harsh.journalapp.JournalNest.controller;
 
 import com.harsh.journalapp.JournalNest.dto.JournalEntryDTO;
+import com.harsh.journalapp.JournalNest.entity.JournalEntry;
 import com.harsh.journalapp.JournalNest.services.JournalEntryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -8,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/journal")
@@ -37,7 +40,7 @@ public class JournalEntryController {
 //    Get all Journal Entries
     @GetMapping("/get-all-entries")
     public ResponseEntity<?> getAllJournalEntries(@RequestParam(defaultValue = "1") int page){
-        if(page > 1) page = 1;
+        if(page < 1) page = 1;
         return journalEntryService.getAllJournalEntries(page);
     }
 
@@ -51,6 +54,13 @@ public class JournalEntryController {
     @DeleteMapping("/delete-journal-entry/{id}")
     public ResponseEntity<?> deleteJournalEntry(@PathVariable String id){
         return journalEntryService.deleteJournalEntry(id);
+    }
+
+//    Search and filter journal
+    @GetMapping("/search-journal")
+    public ResponseEntity<?> getFilterJournals(@RequestParam(required = false) String search, @RequestParam(required = false) String tag, @RequestParam(required = false) String mood){
+        List<JournalEntry> journalEntries = journalEntryService.getFilterJournalEntries(search,tag,mood);
+        return new ResponseEntity<>(journalEntries,HttpStatus.OK);
     }
 
 
