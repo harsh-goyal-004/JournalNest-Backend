@@ -4,9 +4,11 @@ import com.harsh.journalapp.JournalNest.dto.JournalEntryDTO;
 import com.harsh.journalapp.JournalNest.entity.JournalEntry;
 import com.harsh.journalapp.JournalNest.enums.Mood;
 import com.harsh.journalapp.JournalNest.enums.Tags;
+import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JournalEntryMapper {
 
@@ -17,6 +19,14 @@ public class JournalEntryMapper {
             enumTags.add(enumTag);
         }
         return enumTags;
+    }
+
+    public static List<String> enumToString(List<Tags> tags){
+        List<String> stringTags = new ArrayList<>();
+        for(Tags tag : tags){
+            stringTags.add(tag.name());
+        }
+        return stringTags;
     }
 
     public static JournalEntry toEntity(JournalEntryDTO journalEntryDTO){
@@ -30,5 +40,27 @@ public class JournalEntryMapper {
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid tag or mood");
         }
+    }
+
+    public static JournalEntryDTO toDTO(JournalEntry journalEntry){
+        try{
+            JournalEntryDTO journalEntryDTO = new JournalEntryDTO();
+            journalEntryDTO.setId(journalEntry.getId());
+            journalEntryDTO.setTitle(journalEntry.getTitle());
+            journalEntryDTO.setContent(journalEntry.getContent());
+            journalEntryDTO.setTags(enumToString(journalEntry.getTags()));
+            journalEntryDTO.setMood(journalEntry.getMood().name());
+            return journalEntryDTO;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Page<JournalEntryDTO> toDTO(Page<JournalEntry> journalEntries){
+        return journalEntries.map(JournalEntryMapper::toDTO);
+    }
+
+    public static List<JournalEntryDTO> toDTO(List<JournalEntry> journalEntries){
+        return journalEntries.stream().map(JournalEntryMapper::toDTO).collect(Collectors.toList());
     }
 }

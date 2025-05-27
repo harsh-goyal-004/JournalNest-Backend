@@ -7,8 +7,6 @@ import com.harsh.journalapp.JournalNest.repository.UserRespository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -37,22 +35,22 @@ public class UserService {
     private static final PasswordEncoder passwordEncoder =  new BCryptPasswordEncoder();
 
 //    Create New User
-    public ResponseEntity<?> createNewUser(UserDTO userDTO){
+    public String createNewUser(UserDTO userDTO) throws Exception {
         User dbUser = userRespository.findByUsername(userDTO.getUsername());
 
         if(dbUser != null){
-            return new ResponseEntity<>("username already exists", HttpStatus.CONFLICT);
+            throw new Exception("username already exists");
         }
 
         User user1 = UserMapper.toEntity(userDTO);
         user1.setPassword(passwordEncoder.encode(user1.getPassword()));
         user1.setRoles(List.of("USER"));
         userRespository.save(user1);
-        return new ResponseEntity<>("User created Successfully", HttpStatus.CREATED);
+        return "User created Successfully";
     }
 
 //    Login user and generate refresh and access token
-    public ResponseEntity<String> login(UserDTO userDTO, HttpServletResponse response) {
+    public String login(UserDTO userDTO, HttpServletResponse response) throws Exception {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userDTO.getUsername(),userDTO.getPassword()));
 
         if(authentication.isAuthenticated()){
@@ -62,17 +60,17 @@ public class UserService {
 
             Cookie cookie = new Cookie("refreshToken", refreshToken);
             cookie.setHttpOnly(true);
-//            cookie.setSecure(true);
+            cookie.setSecure(true);
             cookie.setPath("/");
             cookie.setMaxAge(7 * 24 * 60 * 60); //7 days
 
             response.addCookie(cookie);
 
-            return new ResponseEntity<>(accessToken, HttpStatus.OK);
+            return accessToken;
 
         }
 
-        return new ResponseEntity<>("Invalid username or password",HttpStatus.FORBIDDEN);
+        throw new Exception("Invalid username or password");
     }
 
 //    This method is used to save user along with the journal references
@@ -81,7 +79,7 @@ public class UserService {
     }
 
 //    This method checks if refresh token is valid and generate new access token
-    public ResponseEntity<String> generateNewAccessToken(String token){
+    public String generateNewAccessToken(String token) throws Exception {
        String username =  jwtService.extractUsername(token);
 
        if(username != null) {
@@ -93,13 +91,13 @@ public class UserService {
 
                    String accessToken = jwtService.generateAccessToken(username);
 
-                   return new ResponseEntity<>(accessToken,HttpStatus.OK);
+                   return accessToken;
 
                }
 
            }
        }
 
-       return new ResponseEntity<>("Refresh Token is expired or invalid", HttpStatus.UNAUTHORIZED);
+       throw new Exception("Refresh Token is expired or invalid");
     }
 }

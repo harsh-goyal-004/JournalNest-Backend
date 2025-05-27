@@ -4,7 +4,6 @@ import com.harsh.journalapp.JournalNest.dto.JournalEntryDTO;
 import com.harsh.journalapp.JournalNest.entity.JournalEntry;
 import com.harsh.journalapp.JournalNest.entity.User;
 import com.harsh.journalapp.JournalNest.enums.Mood;
-import com.harsh.journalapp.JournalNest.enums.Tags;
 import com.harsh.journalapp.JournalNest.mapper.JournalEntryMapper;
 import com.harsh.journalapp.JournalNest.repository.JournalEntryRepository;
 import com.harsh.journalapp.JournalNest.repository.JournalEntryRepositoryImplementation;
@@ -44,7 +43,7 @@ public class JournalEntryService {
 
 //    Create a new Journal Entry
     @Transactional
-    public ResponseEntity<JournalEntry> createJournalEntry(JournalEntryDTO journalEntryDTO, String username){
+    public JournalEntry createJournalEntry(JournalEntryDTO journalEntryDTO, String username){
         User user = userRespository.findByUsername(username);
         JournalEntry journalEntry = JournalEntryMapper.toEntity(journalEntryDTO);
 
@@ -60,12 +59,12 @@ public class JournalEntryService {
 
         JournalEntry journalEntry1 = journalEntryRepository.save(journalEntry);
 
-        return new ResponseEntity<>(journalEntry1, HttpStatus.OK);
+        return journalEntry1;
     }
 
 
 //    GET Single Journal Entry
-    public ResponseEntity<?> getJournalEntry(String journalEntryId){
+    public JournalEntry getJournalEntry(String journalEntryId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
@@ -76,17 +75,17 @@ public class JournalEntryService {
             User user = journalEntry1.getUser();
             if(user != null){
                if(user.getUsername().equals(username)){
-                   return new ResponseEntity<>(journalEntry1, HttpStatus.OK);
+                   return journalEntry1;
                }
             }
         }
 
-        return new ResponseEntity<>("No Journal Entry Found", HttpStatus.NOT_FOUND);
+        return null;
     }
 
 
 //    GET All Journal Entries
-    public ResponseEntity<Page<JournalEntry>> getAllJournalEntries(int page){
+    public Page<JournalEntry> getAllJournalEntries(int page){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User user = userRespository.findByUsername(username);
@@ -94,14 +93,14 @@ public class JournalEntryService {
         if(user != null){
             Pageable pageable = PageRequest.of(page - 1 ,10, Sort.by("createdAt").descending());
             Page<JournalEntry> journalEntries = journalEntryRepository.findJournalEntriesByUser(user,pageable);
-            return new ResponseEntity<>(journalEntries,HttpStatus.OK);
+            return journalEntries;
         }
-        return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        return null;
     }
 
 
 //    Update Single Journal Entry
-    public ResponseEntity<String> updateJournalEntry(String journalEntryId, JournalEntryDTO journalEntryDTO) {
+    public String updateJournalEntry(String journalEntryId, JournalEntryDTO journalEntryDTO) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
@@ -124,13 +123,13 @@ public class JournalEntryService {
                         updatedJournalEntry.setWordCount(TextUtils.calculateWordCount(journalEntryDTO.getContent()));
 
                         journalEntryRepository.save(updatedJournalEntry);
-                        return new ResponseEntity<>("Journal Entry Updated Successfully", HttpStatus.OK);
+                        return "Journal Entry Updated Successfully";
 
                     }
                 }
             }
 
-            return new ResponseEntity<>("No Journal Entry Found", HttpStatus.NOT_FOUND);
+            return null;
 
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid mood or tags");
@@ -140,7 +139,7 @@ public class JournalEntryService {
 
 
 //    Delete Single Journal Entry
-    public ResponseEntity<?> deleteJournalEntry(String journalEntryId){
+    public String deleteJournalEntry(String journalEntryId){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
@@ -152,11 +151,11 @@ public class JournalEntryService {
             if(user != null && username != null){
                 if(user.getUsername().equals(username)){
                     journalEntryRepository.deleteById(journalEntryId);
-                    return new ResponseEntity<>("Journal Entry Deleted Successfully", HttpStatus.NO_CONTENT);
+                    return "Journal Entry Deleted Successfully";
                 }
             }
         }
-        return new ResponseEntity<>("Journal Entry not found", HttpStatus.NOT_FOUND);
+        return null;
     }
 
 
@@ -167,7 +166,10 @@ public class JournalEntryService {
         User user = userRespository.findByUsername(username);
 
         List<JournalEntry> filterJournalEntries = journalEntryRepositoryImplementation.getFilterJournalEntries(search, tag, mood, user);
+        if(!filterJournalEntries.isEmpty()){
+            return filterJournalEntries;
+        }
 
-        return filterJournalEntries;
+        return null;
     }
 }

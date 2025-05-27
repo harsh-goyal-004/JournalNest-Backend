@@ -23,5 +23,5 @@ public class User {
     private String password;
     private String email;
     private List<String> roles;
-
+    private int longestStreak;
 }

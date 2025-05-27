@@ -19,15 +19,25 @@ public class UserController {
 
 //    Create New User
     @PostMapping("/create-user")
-    public ResponseEntity<?> createUser(@RequestBody UserDTO user)
+    public ResponseEntity<String> createUser(@RequestBody UserDTO user)
     {
-        return userService.createNewUser(user);
+        try{
+            String newUser = userService.createNewUser(user);
+            return new ResponseEntity<>(newUser,HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>("username already exists", HttpStatus.CONFLICT);
+        }
     }
 
 //    Login User
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody UserDTO userDTO, HttpServletResponse response){
-        return userService.login(userDTO,response);
+         try{
+             String accessToken = userService.login(userDTO, response);
+             return new ResponseEntity<>(accessToken,HttpStatus.OK);
+         } catch (Exception e) {
+             return new ResponseEntity<>("Invalid username or password",HttpStatus.UNAUTHORIZED);
+         }
     }
 
 //    Get new access token
@@ -40,16 +50,16 @@ public class UserController {
                 String refreshToken = c.getValue();
 
                 if(refreshToken != null){
-                    return userService.generateNewAccessToken(refreshToken);
+                    try {
+                        String newAccessToken = userService.generateNewAccessToken(refreshToken);
+                        return new ResponseEntity<>(newAccessToken, HttpStatus.OK);
+                    } catch (Exception e) {
+                        return new ResponseEntity<>("Refresh token is invalid or expired",HttpStatus.UNAUTHORIZED);
+                    }
                 }
             }
         }
         return new ResponseEntity<>("Refresh Token is invalid or expired", HttpStatus.UNAUTHORIZED);
-    }
-
-    @GetMapping("/hello")
-    public String sayHello(){
-        return "Hello";
     }
 
 }
