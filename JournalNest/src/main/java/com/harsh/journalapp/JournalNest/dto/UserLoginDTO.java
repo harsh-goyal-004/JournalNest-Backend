@@ -6,12 +6,9 @@ import lombok.NonNull;
 
 @Data
 @NoArgsConstructor
-public class UserDTO {
+public class UserLoginDTO {
     @NonNull
-    private String name;
-    @NonNull
-    private  String username;
+    private String username;
     @NonNull
     private String password;
-    private String email;
 }

@@ -32,10 +32,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .cors( cors -> cors.configure(http))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests( request ->
                         request.requestMatchers("/api/health-check").permitAll()
-                                .requestMatchers("/user/create-user").permitAll()
+                                .requestMatchers("/user/register").permitAll()
                                 .requestMatchers("/user/login").permitAll()
                                 .requestMatchers("/user/get-access-token").permitAll()
                                 .anyRequest().authenticated()

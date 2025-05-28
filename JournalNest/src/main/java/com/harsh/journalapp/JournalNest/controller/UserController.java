@@ -1,6 +1,7 @@
 package com.harsh.journalapp.JournalNest.controller;
 
-import com.harsh.journalapp.JournalNest.dto.UserDTO;
+import com.harsh.journalapp.JournalNest.dto.UserLoginDTO;
+import com.harsh.journalapp.JournalNest.dto.UserRegisterDTO;
 import com.harsh.journalapp.JournalNest.services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,8 +19,8 @@ public class UserController {
     private UserService userService;
 
 //    Create New User
-    @PostMapping("/create-user")
-    public ResponseEntity<String> createUser(@RequestBody UserDTO user)
+    @PostMapping("/register")
+    public ResponseEntity<String> createUser(@RequestBody UserRegisterDTO user)
     {
         try{
             String newUser = userService.createNewUser(user);
@@ -31,7 +32,7 @@ public class UserController {
 
 //    Login User
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserDTO userDTO, HttpServletResponse response){
+    public ResponseEntity<String> login(@RequestBody UserLoginDTO userDTO, HttpServletResponse response){
          try{
              String accessToken = userService.login(userDTO, response);
              return new ResponseEntity<>(accessToken,HttpStatus.OK);

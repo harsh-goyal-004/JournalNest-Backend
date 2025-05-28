@@ -1,6 +1,7 @@
 package com.harsh.journalapp.JournalNest.services;
 
-import com.harsh.journalapp.JournalNest.dto.UserDTO;
+import com.harsh.journalapp.JournalNest.dto.UserLoginDTO;
+import com.harsh.journalapp.JournalNest.dto.UserRegisterDTO;
 import com.harsh.journalapp.JournalNest.entity.User;
 import com.harsh.journalapp.JournalNest.mapper.UserMapper;
 import com.harsh.journalapp.JournalNest.repository.UserRespository;
@@ -35,7 +36,7 @@ public class UserService {
     private static final PasswordEncoder passwordEncoder =  new BCryptPasswordEncoder();
 
 //    Create New User
-    public String createNewUser(UserDTO userDTO) throws Exception {
+    public String createNewUser(UserRegisterDTO userDTO) throws Exception {
         User dbUser = userRespository.findByUsername(userDTO.getUsername());
 
         if(dbUser != null){
@@ -50,7 +51,7 @@ public class UserService {
     }
 
 //    Login user and generate refresh and access token
-    public String login(UserDTO userDTO, HttpServletResponse response) throws Exception {
+    public String login(UserLoginDTO userDTO, HttpServletResponse response) throws Exception {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(userDTO.getUsername(),userDTO.getPassword()));
 
         if(authentication.isAuthenticated()){
