@@ -3,11 +3,30 @@ package com.harsh.journalapp.JournalNest.utils;
 import com.harsh.journalapp.JournalNest.entity.JournalEntry;
 import com.harsh.journalapp.JournalNest.entity.User;
 import com.harsh.journalapp.JournalNest.enums.Mood;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDate;
 import java.util.*;
 
 public class AnalyticsUtils {
+
+//    Get Total Entries Per Day
+    public static Map<LocalDate,Integer> getEntriesPerDay(List<JournalEntry> journalEntries){
+        Map<LocalDate, Integer> getTotalEntriesPerDay = new HashMap<>();
+
+        for(JournalEntry journalEntry : journalEntries){
+            LocalDate date = journalEntry.getCreatedAt().toLocalDate();
+
+            if(getTotalEntriesPerDay.containsKey(date)){
+                getTotalEntriesPerDay.put(date, getTotalEntriesPerDay.get(date) + 1);
+            }else{
+                getTotalEntriesPerDay.put(date,1);
+            }
+        }
+
+        return getTotalEntriesPerDay;
+    }
+
 
     public static int getTotalWordCount(List<JournalEntry> journalEntries){
         int total = 0;
@@ -22,6 +41,21 @@ public class AnalyticsUtils {
         return avg;
     }
 
+//    The number of times a mood appeared in an entry
+    public static Map<Mood,Integer> getMoodDistribution(List<JournalEntry> journalEntries){
+        Map<Mood, Integer> moodDistribution = new HashMap<>();
+
+        for(JournalEntry journalEntry : journalEntries){
+            if(moodDistribution.containsKey(journalEntry.getMood())){
+                moodDistribution.put(journalEntry.getMood(), moodDistribution.get(journalEntry.getMood()) + 1);
+            }else{
+                moodDistribution.put(journalEntry.getMood(), 1);
+            }
+        }
+        return moodDistribution;
+    }
+
+//    Most frequently appeared mood
     public static Mood getMostFrequentMood(List<JournalEntry> journalEntries){
         Map<Mood, Integer> frequentMood = new HashMap<>();
         int max = 0;
@@ -90,6 +124,20 @@ public class AnalyticsUtils {
         }else{
             return longestStreak;
         }
+    }
+
+//    This method calculates the word count of all the entries made in a day
+    public static Map<LocalDate,Integer > getWordCountPerDay(List<JournalEntry> journalEntries){
+        Map<LocalDate,Integer> wordCount = new HashMap<>();
+        for(JournalEntry journalEntry : journalEntries){
+            LocalDate date = journalEntry.getCreatedAt().toLocalDate();
+            if(wordCount.containsKey(date)){
+                wordCount.put(date, wordCount.get(date) + journalEntry.getWordCount());
+            }else{
+                wordCount.put(date,journalEntry.getWordCount());
+            }
+        }
+        return wordCount;
     }
 
 }

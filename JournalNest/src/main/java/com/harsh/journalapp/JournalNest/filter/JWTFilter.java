@@ -2,6 +2,7 @@ package com.harsh.journalapp.JournalNest.filter;
 
 import com.harsh.journalapp.JournalNest.services.JWTService;
 import com.harsh.journalapp.JournalNest.services.MyUserDetails;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,21 +27,27 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String header = request.getHeader("Authorization");
+        try{
+            String header = request.getHeader("Authorization");
 
-        if(header != null && header.startsWith("Bearer "))
-        {
-            String token = header.substring(7);
-            String username = jwtService.extractUsername(token);
+            if(header != null && header.startsWith("Bearer "))
+            {
+                String token = header.substring(7);
+                String username = jwtService.extractUsername(token);
 
-            if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
-                UserDetails userDetails = myUserDetails.loadUserByUsername(username);
+                if(username != null && SecurityContextHolder.getContext().getAuthentication() == null){
+                    UserDetails userDetails = myUserDetails.loadUserByUsername(username);
 
-                if(jwtService.validateToken(token,userDetails)){
-                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                    if(jwtService.validateToken(token,userDetails)){
+                        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                    }
                 }
             }
+        }catch(ExpiredJwtException e){
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+
         }
         filterChain.doFilter(request,response);
     }

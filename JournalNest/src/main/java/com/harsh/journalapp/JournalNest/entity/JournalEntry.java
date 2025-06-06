@@ -40,4 +40,6 @@ public class JournalEntry {
 
     @JsonFormat(pattern = "dd-MM-yy HH:mm:ss")
     private LocalDateTime createdAt;
+
+    private boolean starred = false;
 }

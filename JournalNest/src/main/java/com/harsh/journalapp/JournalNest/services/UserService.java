@@ -59,13 +59,15 @@ public class UserService {
             String accessToken = jwtService.generateAccessToken(userDTO.getUsername());
             String refreshToken = jwtService.generateRefreshToken(userDTO.getUsername());
 
-            Cookie cookie = new Cookie("refreshToken", refreshToken);
-            cookie.setHttpOnly(true);
-            cookie.setSecure(true);
-            cookie.setPath("/");
-            cookie.setMaxAge(7 * 24 * 60 * 60); //7 days
+//
+            String cookieString = "refreshToken=" + refreshToken +
+                    "; Max-Age=" + (7 * 24 * 60 * 60) +
+                    "; Path=/" +
+                    "; HttpOnly" +
+                    "; SameSite=Lax";
 
-            response.addCookie(cookie);
+            response.setHeader("Set-Cookie", cookieString);
+
 
             return accessToken;
 

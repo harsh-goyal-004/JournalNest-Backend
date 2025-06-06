@@ -36,6 +36,7 @@ public class JournalEntryMapper {
             journalEntry.setContent(journalEntryDTO.getContent());
             journalEntry.setMood(Mood.valueOf(journalEntryDTO.getMood().toUpperCase()));
             journalEntry.setTags(stringToEnum(journalEntryDTO.getTags()));
+            journalEntry.setStarred(journalEntryDTO.isStarred());
             return journalEntry;
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid tag or mood");
@@ -50,6 +51,8 @@ public class JournalEntryMapper {
             journalEntryDTO.setContent(journalEntry.getContent());
             journalEntryDTO.setTags(enumToString(journalEntry.getTags()));
             journalEntryDTO.setMood(journalEntry.getMood().name());
+            journalEntryDTO.setCreatedAt(journalEntry.getCreatedAt());
+            journalEntryDTO.setStarred(journalEntry.isStarred());
             return journalEntryDTO;
         } catch (Exception e) {
             throw new RuntimeException(e);

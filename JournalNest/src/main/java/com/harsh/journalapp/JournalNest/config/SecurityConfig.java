@@ -38,7 +38,7 @@ public class SecurityConfig {
                         request.requestMatchers("/api/health-check").permitAll()
                                 .requestMatchers("/user/register").permitAll()
                                 .requestMatchers("/user/login").permitAll()
-                                .requestMatchers("/user/get-access-token").permitAll()
+                                .requestMatchers("/user/refresh-token").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

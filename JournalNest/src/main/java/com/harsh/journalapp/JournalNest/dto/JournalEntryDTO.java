@@ -3,6 +3,7 @@ package com.harsh.journalapp.JournalNest.dto;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -17,4 +18,6 @@ public class JournalEntryDTO {
     private List<String> tags;
     @NonNull
     private String mood;
+    private LocalDateTime createdAt;
+    private boolean starred; //default value
 }

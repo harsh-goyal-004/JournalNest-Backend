@@ -36,6 +36,9 @@ public class AnalyticsService {
             List<JournalEntry> journalEntries = journalEntryRepository.findJournalEntriesByUser(user);
             analyticsDTO.setTotalEntries(journalEntries.size()); // Total Entries
 
+//            Total Entries Per Day
+            analyticsDTO.setEntriesPerDay(AnalyticsUtils.getEntriesPerDay(journalEntries));
+
             int totalWordCount = AnalyticsUtils.getTotalWordCount(journalEntries);
             analyticsDTO.setTotalWordCount(totalWordCount); // Total wordCount of all entries
 
@@ -48,7 +51,8 @@ public class AnalyticsService {
             user.setLongestStreak(longestStreak); // Set the new longest streak
             userRespository.save(user); // Save the user with the newly generated longest streak
             analyticsDTO.setLongestStreak(longestStreak); // Set the longest streak in analytics summary
-
+            analyticsDTO.setWordCountPerDay(AnalyticsUtils.getWordCountPerDay(journalEntries));
+            analyticsDTO.setMoodDistribution(AnalyticsUtils.getMoodDistribution(journalEntries));
             analyticsDTO.setMostFrequentMood(AnalyticsUtils.getMostFrequentMood(journalEntries)); // Most frequent Mood of the user
 
             return analyticsDTO;

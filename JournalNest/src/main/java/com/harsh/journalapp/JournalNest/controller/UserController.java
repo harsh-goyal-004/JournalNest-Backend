@@ -42,20 +42,22 @@ public class UserController {
     }
 
 //    Get new access token
-    @GetMapping("/get-access-token")
+    @GetMapping("/refresh-token")
     public ResponseEntity<String> login(HttpServletRequest request){
         Cookie[] cookies = request.getCookies();
 
-        for(Cookie c : cookies){
-            if("refreshToken".equals(c.getName())){
-                String refreshToken = c.getValue();
+        if(cookies != null){
+            for(Cookie c : cookies){
+                if("refreshToken".equals(c.getName())){
+                    String refreshToken = c.getValue();
 
-                if(refreshToken != null){
-                    try {
-                        String newAccessToken = userService.generateNewAccessToken(refreshToken);
-                        return new ResponseEntity<>(newAccessToken, HttpStatus.OK);
-                    } catch (Exception e) {
-                        return new ResponseEntity<>("Refresh token is invalid or expired",HttpStatus.UNAUTHORIZED);
+                    if(refreshToken != null){
+                        try {
+                            String newAccessToken = userService.generateNewAccessToken(refreshToken);
+                            return new ResponseEntity<>(newAccessToken, HttpStatus.OK);
+                        } catch (Exception e) {
+                            return new ResponseEntity<>("Refresh token is invalid or expired",HttpStatus.UNAUTHORIZED);
+                        }
                     }
                 }
             }

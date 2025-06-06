@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -172,4 +173,58 @@ public class JournalEntryService {
 
         return null;
     }
+
+//    Starred Journal Entries
+    public String starredJournalEntry(String id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        Optional<JournalEntry> journalEntry = journalEntryRepository.findById(id);
+
+        if(journalEntry.isPresent()){
+            User user = journalEntry.get().getUser();
+
+            if(user != null && username != null){
+                if(user.getUsername().equals(username)){
+                   JournalEntry journalEntry1 = journalEntry.get();
+                   journalEntry1.setStarred(!journalEntry1.isStarred());
+                   journalEntryRepository.save(journalEntry1);
+                    return "Journal Entry Starred Successfully";
+                }
+            }
+        }
+        return null;
+    }
+
+//    Get Starred Entries
+    public List<JournalEntry> getStarredEntries(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userRespository.findByUsername(username);
+
+        List<JournalEntry> journalEntries = journalEntryRepository.findJournalEntriesByUser(user);
+
+        List<JournalEntry> starredEntries = new ArrayList<>();
+
+        for(JournalEntry journalEntry : journalEntries){
+            System.out.println(journalEntry.isStarred());
+            if(journalEntry.isStarred()){
+                System.out.println(journalEntry.getTitle());
+                starredEntries.add(journalEntry);
+            }
+        }
+
+
+
+        if(!starredEntries.isEmpty()){
+            return starredEntries;
+        }
+
+        return null;
+    }
 }
+
+
+
+
+

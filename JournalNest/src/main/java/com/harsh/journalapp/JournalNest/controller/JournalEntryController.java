@@ -94,5 +94,38 @@ public class JournalEntryController {
         return new ResponseEntity<>("No Journal Entry Found", HttpStatus.NOT_FOUND);
     }
 
+//    Toogle Starred Journal Entry
+    @PutMapping("/toggle-starred")
+    public ResponseEntity<?> toggleStarredJournalEntry(@RequestBody String id){
+        try {
+            String cleanedId = id.replace("\"", "");
+            String response = journalEntryService.starredJournalEntry(cleanedId);
+            if(response != null)
+            {
+                return new ResponseEntity<>("Toggled Starred Entry Successfully",HttpStatus.OK);
+            }
+            return new ResponseEntity<>("Journal Entry Not Found!",HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Something went wrong while toggling the starred journal entry", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+//    Get Starred Journal Entries
+    @GetMapping("/get-starred-entries")
+    public ResponseEntity<?> getStarredEntries(){
+        try{
+            List<JournalEntry> journalEntries = journalEntryService.getStarredEntries();
+            if(!journalEntries.isEmpty()){
+                List<JournalEntryDTO> journalEntryDTOS = JournalEntryMapper.toDTO(journalEntries);
+                return new ResponseEntity<>(journalEntryDTOS,HttpStatus.OK);
+            }
+            return new ResponseEntity<>("No Starred Entry Found",HttpStatus.NOT_FOUND);
+        }catch(Exception e){
+            return new ResponseEntity<>("Something went wrong while fetching the starred journal entry", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
 
 }
