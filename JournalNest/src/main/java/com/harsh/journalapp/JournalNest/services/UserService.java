@@ -74,7 +74,8 @@ public class UserService {
                     "; Max-Age=" + (7 * 24 * 60 * 60) +
                     "; Path=/" +
                     "; HttpOnly" +
-                    "; SameSite=Lax";
+                    "; SameSite=None" +
+                    "; Secure";
 
             response.setHeader("Set-Cookie", cookieString);
 
