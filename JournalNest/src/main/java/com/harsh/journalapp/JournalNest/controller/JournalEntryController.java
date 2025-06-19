@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -85,7 +86,7 @@ public class JournalEntryController {
 
 //    Search and filter journal
     @GetMapping("/search-journal")
-    public ResponseEntity<?> getFilterJournals(@RequestParam(required = false) String search, @RequestParam(required = false) String tag, @RequestParam(required = false) String mood){
+    public ResponseEntity<?> getFilterJournals(@RequestParam(required = false) String search, @RequestParam(required = false) List<String> tag, @RequestParam(required = false) String mood){
         List<JournalEntry> journalEntries = journalEntryService.getFilterJournalEntries(search,tag,mood);
         if(journalEntries != null){
             List<JournalEntryDTO> journalEntryDTOS = JournalEntryMapper.toDTO(journalEntries);
@@ -120,7 +121,7 @@ public class JournalEntryController {
                 List<JournalEntryDTO> journalEntryDTOS = JournalEntryMapper.toDTO(journalEntries);
                 return new ResponseEntity<>(journalEntryDTOS,HttpStatus.OK);
             }
-            return new ResponseEntity<>("No Starred Entry Found",HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(Collections.emptyList(),HttpStatus.OK);
         }catch(Exception e){
             return new ResponseEntity<>("Something went wrong while fetching the starred journal entry", HttpStatus.INTERNAL_SERVER_ERROR);
         }

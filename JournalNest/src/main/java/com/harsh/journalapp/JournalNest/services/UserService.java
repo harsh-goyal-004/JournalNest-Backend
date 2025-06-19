@@ -1,5 +1,8 @@
 package com.harsh.journalapp.JournalNest.services;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+import com.harsh.journalapp.JournalNest.dto.UserInfoDTO;
 import com.harsh.journalapp.JournalNest.dto.UserLoginDTO;
 import com.harsh.journalapp.JournalNest.dto.UserRegisterDTO;
 import com.harsh.journalapp.JournalNest.entity.User;
@@ -11,12 +14,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class UserService {
@@ -32,6 +39,9 @@ public class UserService {
 
     @Autowired
     private JWTService jwtService;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     private static final PasswordEncoder passwordEncoder =  new BCryptPasswordEncoder();
 
@@ -103,4 +113,49 @@ public class UserService {
 
        throw new Exception("Refresh Token is expired or invalid");
     }
+
+//    This method updates user information
+    public String updateUserInfo(UserInfoDTO userInfoDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userRespository.findByUsername(username);
+
+        if(user != null){
+            user.setName(userInfoDTO.getName());
+            user.setEmail(userInfoDTO.getEmail());
+            user.setGender(userInfoDTO.getGender());
+            user.setDateOfBirth(userInfoDTO.getDateOfBirth());
+            user.setNumber(userInfoDTO.getNumber());
+            userRespository.save(user);
+            return "User Information Updated Successfully! ";
+        }
+        return null;
+    }
+
+//    Get User Information
+    public UserInfoDTO getUserInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userRespository.findByUsername(username);
+        if(user != null){
+            return UserMapper.toDTO(user);
+        }
+        return null;
+    }
+
+//      Upload Profile Pic on Cloudinary
+    public String uploadProfilePic(MultipartFile profilePic) throws IOException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        User user = userRespository.findByUsername(username);
+        if(user != null) {
+            Map uploadPic = cloudinary.uploader().upload(profilePic.getBytes(), ObjectUtils.emptyMap());
+            user.setProfileUrl((String) uploadPic.get("url"));
+            userRespository.save(user);
+            return "Profile Pic Updated Successfully";
+        }
+        return null;
+    }
 }
+
+

@@ -21,7 +21,7 @@ public class JournalEntryRepositoryImplementation {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public List<JournalEntry> getFilterJournalEntries(String search, String tag, String mood, User user){
+    public List<JournalEntry> getFilterJournalEntries(String search, List<String> tag, String mood, User user){
 
         Query query = new Query();
         Criteria criteria1 = new Criteria();
@@ -36,21 +36,19 @@ public class JournalEntryRepositoryImplementation {
             );
         }
 
-        if(tag != null){
+        if(tag != null && !tag.isEmpty()){
            try{
-               criteria.add(Criteria.where("tags").in(Tags.valueOf(tag.toUpperCase())));
+               criteria.add(Criteria.where("tags").all(tag));
            }catch(IllegalArgumentException e){
                log.error("Tag is invalid");
-               return List.of();
            }
         }
 
-        if(mood != null){
+        if(mood != "" && mood != null){
             try {
                 criteria.add(Criteria.where("mood").is(Mood.valueOf(mood.toUpperCase())));
             }catch (IllegalArgumentException e){
                 log.error("Mood is invalid");
-                return List.of(); //Return an empty to list to fix sending all journal entries bug
             }
         }
 
@@ -63,10 +61,6 @@ public class JournalEntryRepositoryImplementation {
         }else{
             return List.of();
         }
-
-
-
-
 
     }
 }

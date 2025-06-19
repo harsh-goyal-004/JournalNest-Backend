@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Document(collection = "user")
@@ -24,4 +25,10 @@ public class User {
     private String email;
     private List<String> roles;
     private int longestStreak;
+
+//    User Info
+    private String gender;
+    private int number;
+    private LocalDate dateOfBirth;
+    private String profileUrl;
 }

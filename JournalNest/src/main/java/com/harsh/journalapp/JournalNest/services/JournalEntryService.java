@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -161,7 +162,7 @@ public class JournalEntryService {
 
 
 //    Get Filter Journal Entries
-    public List<JournalEntry> getFilterJournalEntries(String search, String tag, String mood) {
+    public List<JournalEntry> getFilterJournalEntries(String search, List<String> tag, String mood) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
         User user = userRespository.findByUsername(username);
@@ -207,20 +208,14 @@ public class JournalEntryService {
         List<JournalEntry> starredEntries = new ArrayList<>();
 
         for(JournalEntry journalEntry : journalEntries){
-            System.out.println(journalEntry.isStarred());
             if(journalEntry.isStarred()){
-                System.out.println(journalEntry.getTitle());
                 starredEntries.add(journalEntry);
             }
         }
-
-
-
         if(!starredEntries.isEmpty()){
             return starredEntries;
         }
-
-        return null;
+        return Collections.emptyList();
     }
 }
 
